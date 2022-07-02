@@ -24,7 +24,7 @@ public class KabupatenInputFrame extends JFrame{
 
     public void isiKomponen(){
         Connection c = Koneksi.getConnection();
-        String findSQL = "SELECT kabupaten WHERE id = ?";
+        String findSQL = "SELECT * FROM kabupaten WHERE id = ?";
         PreparedStatement ps = null;
         try {
             ps = c.prepareStatement(findSQL);
