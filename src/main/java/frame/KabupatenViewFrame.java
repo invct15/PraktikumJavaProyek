@@ -26,6 +26,10 @@ public class KabupatenViewFrame extends JFrame {
 
 
     public KabupatenViewFrame() {
+        tambahButton.addActionListener(e -> {
+            KabupatenInputFrame inputFrame = new KabupatenInputFrame();
+            inputFrame.setVisible(true);
+        });
         tutupButton.addActionListener(e -> {
             dispose();
         });
