@@ -24,7 +24,7 @@ public class KabupatenInputFrame extends JFrame{
 
     public void isiKomponen(){
         Connection c = Koneksi.getConnection();
-        String findSQL = "SELECT kabupaten WHERE id = ?";
+        String findSQL = "SELECT * FROM kabupaten WHERE id = ?";
         PreparedStatement ps = null;
         try {
             ps = c.prepareStatement(findSQL);
@@ -43,23 +43,50 @@ public class KabupatenInputFrame extends JFrame{
             dispose();
         });
         simpanButton.addActionListener(e -> {
+            if (namaTextField.getText().equals("")){
+                JOptionPane.showConfirmDialog(null,
+                        "isi nama kabupaten",
+                        "Validasi data kosong",
+                        JOptionPane.WARNING_MESSAGE);
+                namaTextField.requestFocus();
+                return;
+            }
             String nama = namaTextField.getText();
             Connection c = Koneksi.getConnection();
             PreparedStatement ps;
             try {
                 if(id==0) {
-                    String insertSQL = "INSERT INTO kabupaten VALUES (NULL, ?)";
-                    ps = c.prepareStatement(insertSQL);
+                    String cekSQL = "SELECT * FROM kabupaten WHERE nama = ?";
+                    ps = c.prepareStatement(cekSQL);
                     ps.setString(1, nama);
-                    ps.executeUpdate();
-                    dispose();
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        JOptionPane.showConfirmDialog(null,
+                                "Data Sudah Ada!!");
+                    } else {
+                        String insertSQL = "INSERT INTO kabupaten VALUES (NULL, ?)";
+                        ps = c.prepareStatement(insertSQL);
+                        ps.setString(1,nama);
+                        ps.executeUpdate();
+                        dispose();
+                    }
                 } else {
-                    String updateSQL = "INSERT INTO kabupaten SET nama = ? WHERE id = ?";
-                    ps = c.prepareStatement(updateSQL);
-                    ps.setString(1,nama);
-                    ps.setInt(2,id);
-                    ps.executeUpdate();
-                    dispose();
+                    String cekSQL = "SELECT * FROM kabupaten WHERE nama = ? AND id != ?";
+                    ps = c.prepareStatement(cekSQL);
+                    ps.setString(1, nama);
+                    ps.setInt(2, id);
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        JOptionPane.showConfirmDialog(null,
+                                "Data Sudah Ada!!");
+                    } else {
+                        String updateSQL = "UPDATE INTO kabupaten SET nama = ? WHERE id = ?";
+                        ps = c.prepareStatement(updateSQL);
+                        ps.setString(1, nama);
+                        ps.setInt(2, id);
+                        ps.executeUpdate();
+                        dispose();
+                    }
                 }
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
@@ -67,7 +94,6 @@ public class KabupatenInputFrame extends JFrame{
         });
 
     init();
-    isiKomponen();
     }
     public void init() {
         setContentPane(mainPanel);
