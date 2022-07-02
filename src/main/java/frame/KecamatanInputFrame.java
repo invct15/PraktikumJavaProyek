@@ -1,12 +1,10 @@
 package frame;
 
+import helpers.ComboBoxItem;
 import helpers.Koneksi;
 
 import javax.swing.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class KecamatanInputFrame extends JFrame{
     private JTextField idTextField;
@@ -16,6 +14,7 @@ public class KecamatanInputFrame extends JFrame{
     private int id;
     private JButton simpanButton;
     private JPanel mainPanel;
+    private JComboBox kabupatenComboBox;
 
 
     public void setId(int id) {
@@ -33,6 +32,14 @@ public class KecamatanInputFrame extends JFrame{
             if (rs.next()) {
                 idTextField.setText(String.valueOf(rs.getInt("id")));
                 namaTextField.setText(rs.getString("nama"));
+                int kabupatenid = rs.getInt("kabupaten_id");
+                for (int i = 0; i < kabupatenComboBox.getItemCount(); i++) {
+                    kabupatenComboBox.setSelectedIndex(i);
+                    ComboBoxItem item = (ComboBoxItem) kabupatenComboBox.getSelectedItem();
+                    if (kabupatenid == item.getValue()){
+                        break;
+                    }
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -51,6 +58,15 @@ public class KecamatanInputFrame extends JFrame{
                 namaTextField.requestFocus();
                 return;
             }
+            ComboBoxItem item = (ComboBoxItem) kabupatenComboBox.getSelectedItem();
+            int kabupatenid = item.getValue();
+            if (kabupatenid ==0) {
+                JOptionPane.showMessageDialog(null,
+                        "Pilih Kabupaten",
+                        "Validasi Combobox", JOptionPane.WARNING_MESSAGE);
+                kabupatenComboBox.requestFocus();
+                return;
+            }
             String nama = namaTextField.getText();
             Connection c = Koneksi.getConnection();
             PreparedStatement ps;
@@ -64,9 +80,10 @@ public class KecamatanInputFrame extends JFrame{
                         JOptionPane.showConfirmDialog(null,
                                 "Data Sudah Ada!!");
                     } else {
-                        String insertSQL = "INSERT INTO kecamatan VALUES (NULL, ?)";
+                        String insertSQL = "INSERT INTO kecamatan (id, nama, kabupaten_id) VALUES (NULL, ?, ?)";
                         ps = c.prepareStatement(insertSQL);
                         ps.setString(1,nama);
+                        ps.setInt(2,kabupatenid);
                         ps.executeUpdate();
                         dispose();
                     }
@@ -80,10 +97,11 @@ public class KecamatanInputFrame extends JFrame{
                         JOptionPane.showConfirmDialog(null,
                                 "Data Sudah Ada!!");
                     } else {
-                        String updateSQL = "UPDATE INTO kecamatan SET nama = ? WHERE id = ?";
+                        String updateSQL = "UPDATE kecamatan SET nama = ?, kabupaten_id = ? WHERE id = ?";
                         ps = c.prepareStatement(updateSQL);
                         ps.setString(1, nama);
-                        ps.setInt(2, id);
+                        ps.setInt(2, kabupatenid);
+                        ps.setInt(3, id);
                         ps.executeUpdate();
                         dispose();
                     }
@@ -92,8 +110,25 @@ public class KecamatanInputFrame extends JFrame{
                 throw new RuntimeException(ex);
             }
         });
-
+        kustomisasiKomponen();
         init();
+    }
+    public void kustomisasiKomponen() {
+        Connection c = Koneksi.getConnection();
+        String selectSQL = "SELECT * FROM kabupaten ORDER BY nama";
+        try {
+            Statement s = c.createStatement();
+            ResultSet rs = s.executeQuery(selectSQL);
+            kabupatenComboBox.addItem(new ComboBoxItem(0,"Pilih Kabupaten"));
+            while (rs.next()) {
+                kabupatenComboBox.addItem(new ComboBoxItem(
+                        rs.getInt("id"),
+                        rs.getString("nama")));
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+
     }
     public void init() {
         setContentPane(mainPanel);
